@@ -1,4 +1,3 @@
 <pipeline name="mypipeline">
     <trackingtool link="<URL constructed above>" regex="##(\d+)"/>
-    ...
 </pipeline>
