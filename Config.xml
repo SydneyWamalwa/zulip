@@ -1,26 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<cruise xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cruise-config.xsd" schemaVersion="139">
-  <server agentAutoRegisterKey="6f650efc-37be-48fd-a286-1838e841df66" webhookSecret="0ce9f23e-8a89-4b95-ac3a-0b762b4fb4d2" serverId="7bdce4c1-d7d1-4833-9645-3d21677fe219" tokenGenerationKey="ad78c628-3b0f-47f6-902f-8f1d6bf5a4db">
-    <artifacts>
-      <artifactsDir>artifacts</artifactsDir>
-    </artifacts>
-  </server>
-  <pipelines group="defaultGroup">
-    <pipeline name="Zulip_5">
-      <materials>
-        <git url="https://github.com/SydneyWamalwa/zulip.git" branch="main" username="SydneyWamalwa" encryptedPassword="AES:K+4cZZEe5Z8Z60dGQufSWQ==:onrj5SGLnDc0I96+j5zrIg==" />
-      </materials>
-      <stage name="Test-and-Report">
-        <jobs>
-          <job name="run-zulip-test">
-            <tasks>
-              <exec command="echo" workingdir="pipelines/Zulip_5/.ssh/zulip">
-                <arg>Hello, Sydney! It was a success!!!</arg>
-              </exec>
-            </tasks>
-          </job>
-        </jobs>
-      </stage>
-    </pipeline>
-  </pipelines>
-</cruise>
+<pipeline name="Zulip_5">
+    <trackingtool link="https://test-sydney.zulipchat.com/api/v1/external/gocd?api_key=82GM7rW4HyG7SAOEZp9aOgnjXneg9fYI" regex="##(\d+)"/>
+    ...
+</pipeline>
