@@ -1,5 +1,0 @@
-<pipeline name="Zulip_6">
-    <trackingtool link="https://test-sydney.zulipchat.com/api/v1/external/gocd?api_key=82GM7rW4HyG7SAOEZp9aOgnjXneg9fYI" regex="##(\d+)"/>
-    ...
-
-</pipeline>
