@@ -75,12 +75,12 @@ from zerver.lib.types import LinkifierDict, RealmPlaygroundDict
 from zerver.lib.utils import assert_is_not_none
 from zerver.models import (
     Message,
+    NamedUserGroup,
     Realm,
     RealmAuditLog,
     RealmPlayground,
     Recipient,
     Subscription,
-    UserGroup,
     UserProfile,
 )
 from zerver.models.groups import SystemGroups
@@ -1085,13 +1085,13 @@ class TestRealmAuditLog(ZulipTestCase):
         realm = do_create_realm(string_id="test", name="foo")
 
         # The expected number of system user group is the total number of roles
-        # from UserGroup.SYSTEM_USER_GROUP_ROLE_MAP in addition to
+        # from NamedUserGroup.SYSTEM_USER_GROUP_ROLE_MAP in addition to
         # full_members_system_group, everyone_on_internet_system_group and
         # nobody_system_group.
-        expected_system_user_group_count = len(UserGroup.SYSTEM_USER_GROUP_ROLE_MAP) + 3
+        expected_system_user_group_count = len(NamedUserGroup.SYSTEM_USER_GROUP_ROLE_MAP) + 3
 
         system_user_group_ids = sorted(
-            UserGroup.objects.filter(
+            NamedUserGroup.objects.filter(
                 realm=realm,
                 is_system_group=True,
             ).values_list("id", flat=True)
@@ -1147,7 +1147,7 @@ class TestRealmAuditLog(ZulipTestCase):
         hamlet = self.example_user("hamlet")
         cordelia = self.example_user("cordelia")
         now = timezone_now()
-        public_group = UserGroup.objects.get(
+        public_group = NamedUserGroup.objects.get(
             name=SystemGroups.EVERYONE_ON_INTERNET, realm=hamlet.realm
         )
         user_group = check_add_user_group(
@@ -1312,7 +1312,7 @@ class TestRealmAuditLog(ZulipTestCase):
         )
 
         old_group = user_group.can_mention_group
-        new_group = UserGroup.objects.get(
+        new_group = NamedUserGroup.objects.get(
             name=SystemGroups.EVERYONE_ON_INTERNET, realm=user_group.realm
         )
         self.assertNotEqual(old_group.id, new_group.id)

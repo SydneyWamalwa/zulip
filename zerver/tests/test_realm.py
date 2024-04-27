@@ -45,13 +45,13 @@ from zerver.models import (
     Attachment,
     CustomProfileField,
     Message,
+    NamedUserGroup,
     Realm,
     RealmAuditLog,
     RealmReactivationStatus,
     RealmUserDefault,
     ScheduledEmail,
     Stream,
-    UserGroup,
     UserGroupMembership,
     UserMessage,
     UserProfile,
@@ -520,7 +520,7 @@ class RealmTest(ZulipTestCase):
             new_stream_announcements_stream_id=orjson.dumps(invalid_notif_stream_id).decode()
         )
         result = self.client_patch("/json/realm", req)
-        self.assert_json_error(result, "Invalid stream ID")
+        self.assert_json_error(result, "Invalid channel ID")
         realm = get_realm("zulip")
         assert realm.new_stream_announcements_stream is not None
         self.assertNotEqual(realm.new_stream_announcements_stream.id, invalid_notif_stream_id)
@@ -605,7 +605,7 @@ class RealmTest(ZulipTestCase):
             ).decode()
         )
         result = self.client_patch("/json/realm", req)
-        self.assert_json_error(result, "Invalid stream ID")
+        self.assert_json_error(result, "Invalid channel ID")
         realm = get_realm("zulip")
         assert realm.signup_announcements_stream is not None
         self.assertNotEqual(
@@ -679,7 +679,7 @@ class RealmTest(ZulipTestCase):
             ).decode()
         )
         result = self.client_patch("/json/realm", req)
-        self.assert_json_error(result, "Invalid stream ID")
+        self.assert_json_error(result, "Invalid channel ID")
         realm = get_realm("zulip")
         assert realm.zulip_update_announcements_stream is not None
         self.assertNotEqual(
@@ -935,7 +935,7 @@ class RealmTest(ZulipTestCase):
         self.assertEqual(realm.message_visibility_limit, None)
         self.assertEqual(realm.upload_quota_gb, None)
 
-        members_system_group = UserGroup.objects.get(name=SystemGroups.MEMBERS, realm=realm)
+        members_system_group = NamedUserGroup.objects.get(name=SystemGroups.MEMBERS, realm=realm)
         do_change_realm_permission_group_setting(
             realm, "can_access_all_users_group", members_system_group, acting_user=None
         )
@@ -959,7 +959,7 @@ class RealmTest(ZulipTestCase):
         self.assertEqual(
             realm.upload_quota_gb, get_seat_count(realm) * settings.UPLOAD_QUOTA_PER_USER_GB
         )
-        everyone_system_group = UserGroup.objects.get(name=SystemGroups.EVERYONE, realm=realm)
+        everyone_system_group = NamedUserGroup.objects.get(name=SystemGroups.EVERYONE, realm=realm)
         self.assertEqual(realm.can_access_all_users_group_id, everyone_system_group.id)
 
         do_set_realm_property(realm, "enable_spectator_access", True, acting_user=None)
@@ -1164,7 +1164,8 @@ class RealmTest(ZulipTestCase):
             permission_configuration,
         ) in Realm.REALM_PERMISSION_GROUP_SETTINGS.items():
             self.assertEqual(
-                getattr(realm, setting_name).name, permission_configuration.default_group_name
+                getattr(realm, setting_name).named_user_group.name,
+                permission_configuration.default_group_name,
             )
 
     def test_do_create_realm_with_keyword_arguments(self) -> None:
@@ -1255,7 +1256,7 @@ class RealmTest(ZulipTestCase):
 
     def test_creating_realm_creates_system_groups(self) -> None:
         realm = do_create_realm("realm_string_id", "realm name")
-        system_user_groups = UserGroup.objects.filter(realm=realm, is_system_group=True)
+        system_user_groups = NamedUserGroup.objects.filter(realm=realm, is_system_group=True)
 
         self.assert_length(system_user_groups, 8)
         user_group_names = [group.name for group in system_user_groups]
@@ -1309,10 +1310,10 @@ class RealmTest(ZulipTestCase):
 
     def test_changing_waiting_period_updates_system_groups(self) -> None:
         realm = get_realm("zulip")
-        members_system_group = UserGroup.objects.get(
+        members_system_group = NamedUserGroup.objects.get(
             realm=realm, name=SystemGroups.MEMBERS, is_system_group=True
         )
-        full_members_system_group = UserGroup.objects.get(
+        full_members_system_group = NamedUserGroup.objects.get(
             realm=realm, name=SystemGroups.FULL_MEMBERS, is_system_group=True
         )
 
@@ -1527,7 +1528,7 @@ class RealmAPITest(ZulipTestCase):
     def do_test_realm_permission_group_setting_update_api(self, setting_name: str) -> None:
         realm = get_realm("zulip")
 
-        all_system_user_groups = UserGroup.objects.filter(
+        all_system_user_groups = NamedUserGroup.objects.filter(
             realm=realm,
             is_system_group=True,
         )
@@ -1572,7 +1573,7 @@ class RealmAPITest(ZulipTestCase):
                 continue
 
             realm = self.update_with_api(setting_name, user_group.id)
-            self.assertEqual(getattr(realm, setting_name), user_group)
+            self.assertEqual(getattr(realm, setting_name), user_group.usergroup_ptr)
 
     def test_update_realm_properties(self) -> None:
         for prop in Realm.property_types:
@@ -1804,7 +1805,7 @@ class RealmAPITest(ZulipTestCase):
         do_change_realm_plan_type(realm, Realm.PLAN_TYPE_LIMITED, acting_user=None)
         self.login("iago")
 
-        members_group = UserGroup.objects.get(name="role:members", realm=realm)
+        members_group = NamedUserGroup.objects.get(name="role:members", realm=realm)
         req = {"can_access_all_users_group": orjson.dumps(members_group.id).decode()}
         result = self.client_patch("/json/realm", req)
         self.assert_json_error(result, "Available on Zulip Cloud Plus. Upgrade to access.")
@@ -1831,7 +1832,7 @@ class ScrubRealmTest(ZulipTestCase):
             )
             base = "/user_uploads/"
             self.assertEqual(base, url[: len(base)])
-            path_id = re.sub("/user_uploads/", "", url)
+            path_id = re.sub(r"/user_uploads/", "", url)
             self.assertTrue(os.path.isfile(os.path.join(settings.LOCAL_FILES_DIR, path_id)))
             path_ids.append(path_id)
 
@@ -1908,7 +1909,7 @@ class ScrubRealmTest(ZulipTestCase):
             )
             base = "/user_uploads/"
             self.assertEqual(base, url[: len(base)])
-            file_path = os.path.join(settings.LOCAL_FILES_DIR, re.sub("/user_uploads/", "", url))
+            file_path = os.path.join(settings.LOCAL_FILES_DIR, re.sub(r"/user_uploads/", "", url))
             self.assertTrue(os.path.isfile(file_path))
             file_paths.append(file_path)
 

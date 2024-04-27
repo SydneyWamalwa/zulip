@@ -52,6 +52,7 @@ from zerver.models import (
     Huddle,
     Message,
     MutedUser,
+    NamedUserGroup,
     OnboardingStep,
     Reaction,
     Realm,
@@ -193,7 +194,7 @@ def fix_upload_links(data: TableData, message_table: TableName) -> None:
 
 def fix_streams_can_remove_subscribers_group_column(data: TableData, realm: Realm) -> None:
     table = get_db_table(Stream)
-    admins_group = UserGroup.objects.get(
+    admins_group = NamedUserGroup.objects.get(
         name=SystemGroups.ADMINISTRATORS, realm=realm, is_system_group=True
     )
     for stream in data[table]:
@@ -688,6 +689,29 @@ def bulk_import_model(data: TableData, model: Any, dump_file_id: Optional[str] =
         logging.info("Successfully imported %s from %s[%s].", model, table, dump_file_id)
 
 
+def bulk_import_named_user_groups(data: TableData) -> None:
+    vals = [
+        (
+            group["usergroup_ptr_id"],
+            group["realm_for_sharding_id"],
+            group["name"],
+            group["description"],
+            group["is_system_group"],
+            group["can_mention_group_id"],
+        )
+        for group in data["zerver_namedusergroup"]
+    ]
+
+    query = SQL(
+        """
+        INSERT INTO zerver_namedusergroup (usergroup_ptr_id, realm_id, name, description, is_system_group, can_mention_group_id)
+        VALUES %s
+        """
+    )
+    with connection.cursor() as cursor:
+        execute_values(cursor.cursor, query, vals)
+
+
 # Client is a table shared by multiple realms, so in order to
 # correctly import multiple realms into the same server, we need to
 # check if a Client object already exists, and so we need to support
@@ -1032,15 +1056,27 @@ def do_import_realm(import_dir: Path, subdomain: str, processes: int = 1) -> Rea
 
         if "zerver_usergroup" in data:
             re_map_foreign_keys(data, "zerver_usergroup", "realm", related_table="realm")
-            for setting_name in UserGroup.GROUP_PERMISSION_SETTINGS:
-                re_map_foreign_keys(
-                    data, "zerver_usergroup", setting_name, related_table="usergroup"
-                )
             bulk_import_model(data, UserGroup)
+
+            if "zerver_namedusergroup" in data:
+                re_map_foreign_keys(
+                    data, "zerver_namedusergroup", "usergroup_ptr", related_table="usergroup"
+                )
+                re_map_foreign_keys(
+                    data, "zerver_namedusergroup", "realm_for_sharding", related_table="realm"
+                )
+                for setting_name in NamedUserGroup.GROUP_PERMISSION_SETTINGS:
+                    re_map_foreign_keys(
+                        data,
+                        "zerver_namedusergroup",
+                        setting_name,
+                        related_table="usergroup",
+                    )
+                bulk_import_named_user_groups(data)
 
         # We expect Zulip server exports to contain these system groups,
         # this logic here is needed to handle the imports from other services.
-        role_system_groups_dict: Optional[Dict[int, UserGroup]] = None
+        role_system_groups_dict: Optional[Dict[int, NamedUserGroup]] = None
         if "zerver_usergroup" not in data:
             role_system_groups_dict = create_system_user_groups_for_realm(realm)
 
@@ -1736,9 +1772,11 @@ def import_analytics_data(realm: Realm, import_dir: Path, crossrealm_user_ids: S
 
 
 def add_users_to_system_user_groups(
-    realm: Realm, user_profiles: List[UserProfile], role_system_groups_dict: Dict[int, UserGroup]
+    realm: Realm,
+    user_profiles: List[UserProfile],
+    role_system_groups_dict: Dict[int, NamedUserGroup],
 ) -> None:
-    full_members_system_group = UserGroup.objects.get(
+    full_members_system_group = NamedUserGroup.objects.get(
         name=SystemGroups.FULL_MEMBERS,
         realm=realm,
         is_system_group=True,
@@ -1760,7 +1798,7 @@ def add_users_to_system_user_groups(
         RealmAuditLog(
             realm=realm,
             modified_user=membership.user_profile,
-            modified_user_group=membership.user_group,
+            modified_user_group=membership.user_group.named_user_group,
             event_type=RealmAuditLog.USER_GROUP_DIRECT_USER_MEMBERSHIP_ADDED,
             event_time=now,
             acting_user=None,

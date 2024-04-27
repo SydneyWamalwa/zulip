@@ -2291,14 +2291,15 @@ paths:
                             - type: object
                               additionalProperties: false
                               description: |
-                                Event sent when the set of onboarding steps to show for
-                                the current user have changed (E.g. because the user dismissed one).
+                                Event sent when the set of onboarding steps to show for the current user
+                                has changed (e.g. because the user dismissed one).
 
-                                Clients that feature a similar tutorial experience to the Zulip
-                                web app may want to handle these events.
+                                Clients that feature a similar tutorial experience to the Zulip web app
+                                may want to handle these events.
 
-                                **Changes**: Before Zulip 8.0 (feature level 233), this was named
-                                as `Hotspots`. One-time notice wasn't available earlier.
+                                **Changes**: Before Zulip 8.0 (feature level 233), this event was named
+                                `hotspots`. Prior to this feature level, one-time notice onboarding
+                                steps were not supported.
                               properties:
                                 id:
                                   $ref: "#/components/schemas/EventIdSchema"
@@ -2310,11 +2311,13 @@ paths:
                                 onboarding_steps:
                                   type: array
                                   description: |
-                                    An array of dictionaries where each
-                                    dictionary contains details about a single onboarding step.
+                                    An array of dictionaries where each dictionary contains details about a
+                                    single onboarding step.
 
-                                    **Changes**: Before Zulip 8.0 (feature level 233), this array
-                                    was named as `hotspots`. One-time notice wasn't available earlier.
+                                    **Changes**: Before Zulip 8.0 (feature level 233), this array was named
+                                    `hotspots`. Prior to this feature level, one-time notice onboarding
+                                    steps were not supported, and the `type` field in these objects did not
+                                    exist as all onboarding steps were implicitly hotspots.
                                   items:
                                     $ref: "#/components/schemas/OnboardingStep"
                               example:
@@ -2324,11 +2327,15 @@ paths:
                                     [
                                       {
                                         "type": "hotspot",
-                                        "name": "intro_streams",
-                                        "title": "Catch up on a stream",
-                                        "description": "Messages sent to a stream are seen by everyone subscribed to that stream. Try clicking on one of the stream links below.",
+                                        "name": "intro_compose",
+                                        "title": "Compose",
+                                        "description": "Click here to start a new conversation. Pick a topic (2-3 words is best), and give it a go!",
                                         "delay": 0.5,
                                         "has_trigger": false,
+                                      },
+                                      {
+                                        "type": "one_time_notice",
+                                        "name": "visibility_policy_banner",
                                       },
                                     ],
                                   "id": 0,
@@ -5132,7 +5139,7 @@ paths:
                   - example:
                       {
                         "code": "BAD_REQUEST",
-                        "msg": "Invalid stream name 'nonexistent'",
+                        "msg": "Invalid channel name 'nonexistent'",
                         "result": "error",
                       }
                     description: |
@@ -5510,7 +5517,7 @@ paths:
                     example:
                       {
                         "code": "BAD_REQUEST",
-                        "msg": "Must specify exactly 1 stream ID for stream messages",
+                        "msg": "Must specify exactly 1 channel ID for channel messages",
                         "result": "error",
                       }
   /drafts/{draft_id}:
@@ -6034,7 +6041,7 @@ paths:
                       - example:
                           {
                             "code": "BAD_REQUEST",
-                            "msg": "Private streams cannot be made default.",
+                            "msg": "Private channels cannot be made default.",
                             "result": "error",
                           }
                         description: |
@@ -6201,8 +6208,9 @@ paths:
             which are aliases for (and return the same results as) the `stream` and
             `streams` filters respectively.
 
-            In Zulip 9.0 (feature level 249), added new `has:reaction`
-            filter, matching messages with at least one emoji reaction.
+            In Zulip 9.0 (feature level 249), narrows gained support for a new
+            filter, `has:reaction`, which returns messages with at least one
+            [emoji reaction](/help/emoji-reactions).
 
             In Zulip 7.0 (feature level 177), narrows gained support
             for three new filters related to direct messages: `is:dm`, `dm` and
@@ -6645,7 +6653,7 @@ paths:
                       - example:
                           {
                             "result": "error",
-                            "msg": "You do not have permission to use stream wildcard mentions in this stream.",
+                            "msg": "You do not have permission to use channel wildcard mentions in this channel.",
                             "code": "STREAM_WILDCARD_MENTION_NOT_ALLOWED",
                           }
                         description: |
@@ -7079,8 +7087,9 @@ paths:
                     which are aliases for (and return the same results as) the `stream` and
                     `streams` filters respectively.
 
-                    In Zulip 9.0 (feature level 249), added new `has:reaction`
-                    filter, matching messages with at least one emoji reaction.
+                    In Zulip 9.0 (feature level 249), narrows gained support for a new
+                    filter, `has:reaction`, which returns messages with at least one
+                    [emoji reaction](/help/emoji-reactions).
 
                     In Zulip 7.0 (feature level 177), narrows gained support
                     for three new filters related to direct messages: `is:dm`, `dm` and
@@ -7511,8 +7520,9 @@ paths:
             which are aliases for (and return the same results as) the `stream` and
             `streams` filters respectively.
 
-            In Zulip 9.0 (feature level 249), added new `has:reaction`
-            filter, matching messages with at least one emoji reaction.
+            In Zulip 9.0 (feature level 249), narrows gained support for a new
+            filter, `has:reaction`, which returns messages with at least one
+            [emoji reaction](/help/emoji-reactions).
 
             In Zulip 7.0 (feature level 177), narrows gained support
             for three new filters related to direct messages: `is:dm`, `dm` and
@@ -8000,7 +8010,7 @@ paths:
                       - example:
                           {
                             "result": "error",
-                            "msg": "You do not have permission to use stream wildcard mentions in this stream.",
+                            "msg": "You do not have permission to use channel wildcard mentions in this channel.",
                             "code": "STREAM_WILDCARD_MENTION_NOT_ALLOWED",
                           }
                         description: |
@@ -9459,7 +9469,7 @@ paths:
                   - $ref: "#/components/schemas/CodedError"
                   - example:
                       {
-                        "msg": "Unable to access stream (private_stream).",
+                        "msg": "Unable to access channel (private).",
                         "result": "error",
                         "code": "BAD_REQUEST",
                       }
@@ -12039,7 +12049,7 @@ paths:
                       - example:
                           {
                             "code": "BAD_REQUEST",
-                            "msg": "Stream does not exist with id: 11. No invites were sent.",
+                            "msg": "Invalid channel ID 11. No invites were sent.",
                             "result": "error",
                           }
                         description: |
@@ -12051,7 +12061,7 @@ paths:
                       - example:
                           {
                             "code": "BAD_REQUEST",
-                            "msg": "You do not have permission to subscribe other users to streams.",
+                            "msg": "You do not have permission to subscribe other users to channels.",
                             "result": "error",
                           }
                         description: |
@@ -12060,7 +12070,7 @@ paths:
   /invites/multiuse:
     post:
       operationId: create-invite-link
-      summary: Create reusable invitation link
+      summary: Create a reusable invitation link
       tags: ["invites"]
       description: |
         Create a [reusable invitation link](/help/invite-new-users#create-a-reusable-invitation-link)
@@ -12152,7 +12162,7 @@ paths:
                       - example:
                           {
                             "code": "BAD_REQUEST",
-                            "msg": "Invalid stream ID 11. No invites were sent.",
+                            "msg": "Invalid channel ID 11. No invites were sent.",
                             "result": "error",
                           }
                         description: |
@@ -12164,7 +12174,7 @@ paths:
                       - example:
                           {
                             "code": "BAD_REQUEST",
-                            "msg": "You do not have permission to subscribe other users to streams.",
+                            "msg": "You do not have permission to subscribe other users to channels.",
                             "result": "error",
                           }
                         description: |
@@ -12207,7 +12217,7 @@ paths:
                             "code": "BAD_REQUEST",
                           }
                         description: |
-                          A typical failed JSON response for an invalid `invite_id`:
+                          A typical failed JSON response for an invalid email invitation ID:
   /register:
     post:
       operationId: register-queue
@@ -12610,9 +12620,14 @@ paths:
                           Present if `onboarding_steps` is present in `fetch_event_types`.
 
                           An array of dictionaries, where each dictionary contains details about
-                          a single onboarding step that should be shown to new users.
+                          a single onboarding step that should be shown to the user.
 
-                          We expect that only official Zulip clients will interact with these data.
+                          We expect that only official Zulip clients will interact with this data.
+
+                          **Changes**: Before Zulip 8.0 (feature level 233), this array was named
+                          `hotspots`. Prior to this feature level, one-time notice onboarding
+                          steps were not supported, and the `type` field in these objects did not
+                          exist as all onboarding steps were implicitly hotspots.
                         items:
                           $ref: "#/components/schemas/OnboardingStep"
                       max_message_id:
@@ -18306,7 +18321,7 @@ paths:
                   - example:
                       {
                         "code": "BAD_REQUEST",
-                        "msg": "Missing stream_id",
+                        "msg": "Missing channel ID",
                         "result": "error",
                       }
                     description: |
@@ -19235,9 +19250,9 @@ components:
           description: |
             The ID of the user who created this stream.
 
-            Is `null` for streams with no recorded creator, often because they are very
-            old, or were created via a data import tool or [management
-            command][management-commands].
+            A `null` value means the stream has no recorded creator, which is often
+            because the stream is very old, or because it was created via a data
+            import tool or [management command][management-commands].
 
             **Changes**: New in Zulip 9.0 (feature level 254).
 
@@ -19574,39 +19589,45 @@ components:
       additionalProperties: false
       description: |
         Dictionary containing details of a single onboarding step.
-
-        **Changes**: Before Zulip 8.0 (feature level 233), this was
-        named as `Hotspot`. One-time notice wasn't available earlier.
       properties:
         type:
           type: string
           description: |
             The type of the onboarding step. Valid values are either
-            'hotspot' or 'one_time_notice'.
+            `"hotspot"` or `"one_time_notice"`.
 
             **Changes**: New in Zulip 8.0 (feature level 233).
         name:
           type: string
           description: |
-            The name of the hotspot.
+            The name of the onboarding step.
         title:
           type: string
           description: |
-            The title of the hotspot, as will be displayed to the user.
+            The title of the onboarding step, as displayed to the user.
+
+            Only present for onboarding steps with type `"hotspot"`.
         description:
           type: string
           description: |
-            The description of the hotspot, as will be displayed to the
+            The description of the onboarding step, as displayed to the
             user.
+
+            Only present for onboarding steps with type `"hotspot"`.
         delay:
           type: number
           description: |
-            The delay after which the user should be shown the hotspot.
+            The delay, in seconds, after which the user should be shown
+            the onboarding step.
+
+            Only present for onboarding steps with type `"hotspot"`.
         has_trigger:
           type: boolean
           description: |
-            The has_trigger is used to identify if the hotspot will activate
-            only when some specific event occurs.
+            Identifies if the onboarding step will activate only when some
+            specific event occurs.
+
+            Only present for onboarding steps with type `"hotspot"`.
 
             **Changes**: New in Zulip 8.0 (feature level 230).
     RealmAuthenticationMethod:
@@ -19836,7 +19857,13 @@ components:
         id:
           type: integer
           description: |
-            The unique ID of the invitation.
+            The ID of the invitation.
+
+            Note that email invitations and reusable invitation links are stored
+            in different database tables on the server, so each ID is guaranteed
+            to be unique in combination with the boolean value of `is_multiuse`,
+            e.g. there can only be one invitation with `id: 1` and `is_multiuse:
+            true`.
         invited_by_user_id:
           type: integer
           description: |
@@ -19974,9 +20001,9 @@ components:
           description: |
             The ID of the user who created this stream.
 
-            Is `null` for streams with no recorded creator, often because they are very
-            old, or were created via a data import tool or [management
-            command][management-commands].
+            A `null` value means the stream has no recorded creator, which is often
+            because the stream is very old, or because it was created via a data
+            import tool or [management command][management-commands].
 
             **Changes**: New in Zulip 9.0 (feature level 254).
 
@@ -21254,7 +21281,7 @@ components:
             code: {}
           example:
             {
-              "msg": "Invalid stream ID",
+              "msg": "Invalid channel ID",
               "code": "BAD_REQUEST",
               "result": "error",
             }
@@ -21273,9 +21300,9 @@ components:
           example:
             {
               "code": "STREAM_DOES_NOT_EXIST",
-              "msg": "Stream 'nonexistent_stream' does not exist",
+              "msg": "Channel 'nonexistent' does not exist",
               "result": "error",
-              "stream": "nonexistent_stream",
+              "stream": "nonexistent",
             }
     NonExistingStreamIdError:
       allOf:
@@ -21292,7 +21319,7 @@ components:
           example:
             {
               "code": "STREAM_DOES_NOT_EXIST",
-              "msg": "Stream with ID '9' does not exist",
+              "msg": "Channel with ID '9' does not exist",
               "result": "error",
               "stream_id": 9,
             }
@@ -21533,8 +21560,9 @@ components:
         which are aliases for (and return the same results as) the `stream` and
         `streams` filters respectively.
 
-        In Zulip 9.0 (feature level 249), added new `has:reaction`
-        filter, matching messages with at least one emoji reaction.
+        In Zulip 9.0 (feature level 249), narrows gained support for a new
+        filter, `has:reaction`, which returns messages with at least one
+        [emoji reaction](/help/emoji-reactions).
 
         In Zulip 7.0 (feature level 177), narrows gained support
         for three new filters related to direct messages: `is:dm`, `dm` and

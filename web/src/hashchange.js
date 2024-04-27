@@ -12,7 +12,6 @@ import * as inbox_ui from "./inbox_ui";
 import * as inbox_util from "./inbox_util";
 import * as info_overlay from "./info_overlay";
 import * as message_fetch from "./message_fetch";
-import * as message_lists from "./message_lists";
 import * as message_viewport from "./message_viewport";
 import * as modals from "./modals";
 import * as narrow from "./narrow";
@@ -75,6 +74,10 @@ export function set_hash_to_home_view() {
     let home_view_hash = `#${user_settings.web_home_view}`;
     if (home_view_hash === "#recent_topics") {
         home_view_hash = "#recent";
+    }
+
+    if (home_view_hash === "#all_messages") {
+        home_view_hash = "#feed";
     }
 
     if (window.location.hash !== home_view_hash) {
@@ -161,7 +164,6 @@ function do_hashchange_normal(from_reload) {
             if (from_reload) {
                 blueslip.debug("We are narrowing as part of a reload.");
                 if (message_fetch.initial_narrow_pointer !== undefined) {
-                    message_lists.home.pre_narrow_offset = message_fetch.initial_offset;
                     narrow_opts.then_select_id = message_fetch.initial_narrow_pointer;
                     narrow_opts.then_select_offset = message_fetch.initial_narrow_offset;
                 }
@@ -199,6 +201,14 @@ function do_hashchange_normal(from_reload) {
             inbox_ui.show();
             break;
         case "#all_messages":
+            // "#all_messages" was renamed to "#feed" in 2024. Unlike
+            // the recent hash rename, there are likely few links that
+            // would break if this compatibility code was removed, but
+            // there's little cost to keeping it.
+            show_all_message_view();
+            window.location.replace("#feed");
+            break;
+        case "#feed":
             show_all_message_view();
             break;
         case "#keyboard-shortcuts":

@@ -56,11 +56,11 @@ from zerver.models import (
     DefaultStream,
     Message,
     MultiuseInvite,
+    NamedUserGroup,
     PreregistrationUser,
     Realm,
     ScheduledEmail,
     Stream,
-    UserGroup,
     UserMessage,
     UserProfile,
 )
@@ -107,7 +107,7 @@ class StreamSetupTest(ZulipTestCase):
 
         new_user = self.create_simple_new_user(realm, "alice@zulip.com")
 
-        with self.assert_database_query_count(12):
+        with self.assert_database_query_count(13):
             set_up_streams_for_new_human_user(
                 user_profile=new_user,
                 prereg_user=None,
@@ -1044,7 +1044,7 @@ earl-test@zulip.com""",
         self.login("hamlet")
         self.assert_json_error(
             self.invite("iago-test@zulip.com", ["NotARealStream"]),
-            f"Stream does not exist with id: {self.INVALID_STREAM_ID}. No invites were sent.",
+            f"Invalid channel ID {self.INVALID_STREAM_ID}. No invites were sent.",
         )
         self.check_sent_emails([])
 
@@ -1293,7 +1293,7 @@ so we didn't send them an invitation. We did send invitations to everyone else!"
         self.login("hamlet")
         result = self.invite(invitee, ["Denmark", "Scotland"])
         self.assert_json_error(
-            result, "You do not have permission to subscribe other users to streams."
+            result, "You do not have permission to subscribe other users to channels."
         )
 
         result = self.invite(invitee, [])
@@ -2465,7 +2465,7 @@ class MultiuseInviteTest(ZulipTestCase):
 
     def test_multiuse_invite_without_permission_to_subscribe_others(self) -> None:
         realm = get_realm("zulip")
-        members_group = UserGroup.objects.get(
+        members_group = NamedUserGroup.objects.get(
             name=SystemGroups.MEMBERS, realm=realm, is_system_group=True
         )
         do_change_realm_permission_group_setting(
@@ -2487,7 +2487,7 @@ class MultiuseInviteTest(ZulipTestCase):
             },
         )
         self.assert_json_error(
-            result, "You do not have permission to subscribe other users to streams."
+            result, "You do not have permission to subscribe other users to channels."
         )
 
         result = self.client_post(
@@ -2524,10 +2524,10 @@ class MultiuseInviteTest(ZulipTestCase):
 
     def test_create_multiuse_invite_group_setting(self) -> None:
         realm = get_realm("zulip")
-        full_members_system_group = UserGroup.objects.get(
+        full_members_system_group = NamedUserGroup.objects.get(
             name=SystemGroups.FULL_MEMBERS, realm=realm, is_system_group=True
         )
-        nobody_system_group = UserGroup.objects.get(
+        nobody_system_group = NamedUserGroup.objects.get(
             name=SystemGroups.NOBODY, realm=realm, is_system_group=True
         )
 
@@ -2559,7 +2559,7 @@ class MultiuseInviteTest(ZulipTestCase):
 
     def test_only_owner_can_change_create_multiuse_invite_group(self) -> None:
         realm = get_realm("zulip")
-        full_members_system_group = UserGroup.objects.get(
+        full_members_system_group = NamedUserGroup.objects.get(
             name=SystemGroups.FULL_MEMBERS, realm=realm, is_system_group=True
         )
 
@@ -2603,7 +2603,7 @@ class MultiuseInviteTest(ZulipTestCase):
 
     def test_multiuse_link_for_inviting_as_admin(self) -> None:
         realm = get_realm("zulip")
-        full_members_system_group = UserGroup.objects.get(
+        full_members_system_group = NamedUserGroup.objects.get(
             name=SystemGroups.FULL_MEMBERS, realm=realm, is_system_group=True
         )
 
@@ -2634,7 +2634,7 @@ class MultiuseInviteTest(ZulipTestCase):
 
     def test_multiuse_link_for_inviting_as_moderator(self) -> None:
         realm = get_realm("zulip")
-        full_members_system_group = UserGroup.objects.get(
+        full_members_system_group = NamedUserGroup.objects.get(
             name=SystemGroups.FULL_MEMBERS, realm=realm, is_system_group=True
         )
 
@@ -2682,7 +2682,7 @@ class MultiuseInviteTest(ZulipTestCase):
                 "invite_expires_in_minutes": 2 * 24 * 60,
             },
         )
-        self.assert_json_error(result, "Invalid stream ID 54321. No invites were sent.")
+        self.assert_json_error(result, "Invalid channel ID 54321. No invites were sent.")
 
     def test_create_multiuse_link_invalid_invite_as_api_call(self) -> None:
         self.login("iago")

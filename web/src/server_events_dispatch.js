@@ -175,7 +175,6 @@ export function dispatch_normal_event(event) {
 
         case "web_reload_client": {
             const reload_options = {
-                save_pointer: true,
                 save_compose: true,
                 message_html: "The application has been updated; reloading!",
             };
@@ -770,8 +769,8 @@ export function dispatch_normal_event(event) {
                 activity_ui.build_user_sidebar();
             }
             if (event.property === "dense_mode") {
-                $("body").toggleClass("less_dense_mode");
-                $("body").toggleClass("more_dense_mode");
+                $("body").toggleClass("less-dense-mode");
+                $("body").toggleClass("more-dense-mode");
             }
             if (
                 event.property === "web_font_size_px" ||

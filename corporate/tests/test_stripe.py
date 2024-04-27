@@ -245,19 +245,19 @@ def normalize_fixture_data(
     ]
     # We'll replace cus_D7OT2jf5YAtZQ2 with something like cus_NORMALIZED0001
     pattern_translations = {
-        f"{prefix}_[A-Za-z0-9]{{{length}}}": f"{prefix}_NORMALIZED%0{length - 10}d"
+        rf"{prefix}_[A-Za-z0-9]{{{length}}}": f"{prefix}_NORMALIZED%0{length - 10}d"
         for prefix, length in id_lengths
     }
     # We'll replace "invoice_prefix": "A35BC4Q" with something like "invoice_prefix": "NORMA01"
     pattern_translations.update(
         {
-            '"invoice_prefix": "([A-Za-z0-9]{7,8})"': "NORMA%02d",
-            '"fingerprint": "([A-Za-z0-9]{16})"': "NORMALIZED%06d",
-            '"number": "([A-Za-z0-9]{7,8}-[A-Za-z0-9]{4})"': "NORMALI-%04d",
-            '"address": "([A-Za-z0-9]{9}-test_[A-Za-z0-9]{12})"': "000000000-test_NORMALIZED%02d",
+            r'"invoice_prefix": "([A-Za-z0-9]{7,8})"': "NORMA%02d",
+            r'"fingerprint": "([A-Za-z0-9]{16})"': "NORMALIZED%06d",
+            r'"number": "([A-Za-z0-9]{7,8}-[A-Za-z0-9]{4})"': "NORMALI-%04d",
+            r'"address": "([A-Za-z0-9]{9}-test_[A-Za-z0-9]{12})"': "000000000-test_NORMALIZED%02d",
             # Don't use (..) notation, since the matched strings may be small integers that will also match
             # elsewhere in the file
-            '"realm_id": "[0-9]+"': '"realm_id": "%d"',
+            r'"realm_id": "[0-9]+"': '"realm_id": "%d"',
             r'"account_name": "[\w\s]+"': '"account_name": "NORMALIZED-%d"',
         }
     )
@@ -265,7 +265,7 @@ def normalize_fixture_data(
     # why we're doing something a bit more complicated
     for i, timestamp_field in enumerate(tested_timestamp_fields):
         # Don't use (..) notation, since the matched timestamp can easily appear in other fields
-        pattern_translations[f'"{timestamp_field}": 1[5-9][0-9]{{8}}(?![0-9-])'] = (
+        pattern_translations[rf'"{timestamp_field}": 1[5-9][0-9]{{8}}(?![0-9-])'] = (
             f'"{timestamp_field}": 1{i + 1:02}%07d'
         )
 
@@ -2343,6 +2343,37 @@ class StripeTest(StripeTestCase):
             ],
             response,
         )
+
+    def test_demo_request(self) -> None:
+        result = self.client_get("/request-demo/")
+        self.assertEqual(result.status_code, 200)
+        self.assert_in_success_response(["Request a demo"], result)
+
+        data = {
+            "full_name": "King Hamlet",
+            "email": "test@zulip.com",
+            "role": "Manager",
+            "organization_name": "Zulip",
+            "organization_type": "Business",
+            "organization_website": "https://example.com",
+            "expected_user_count": "10 (2 unpaid members)",
+            "message": "Need help!",
+        }
+        result = self.client_post("/request-demo/", data)
+        self.assert_in_success_response(["Thanks for contacting us!"], result)
+
+        from django.core.mail import outbox
+
+        self.assert_length(outbox, 1)
+
+        for message in outbox:
+            self.assert_length(message.to, 1)
+            self.assertEqual(message.to[0], "desdemona+admin@zulip.com")
+            self.assertEqual(message.subject, "Demo request for Zulip")
+            self.assertEqual(message.reply_to, ["test@zulip.com"])
+            self.assertEqual(self.email_envelope_from(message), settings.NOREPLY_EMAIL_ADDRESS)
+            self.assertIn("Zulip demo request <noreply-", self.email_display_from(message))
+            self.assertIn("Full name: King Hamlet", message.body)
 
     def test_support_request(self) -> None:
         user = self.example_user("hamlet")

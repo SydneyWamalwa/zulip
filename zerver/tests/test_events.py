@@ -221,6 +221,7 @@ from zerver.models import (
     CustomProfileField,
     Message,
     MultiuseInvite,
+    NamedUserGroup,
     PreregistrationUser,
     Realm,
     RealmAuditLog,
@@ -230,7 +231,6 @@ from zerver.models import (
     RealmUserDefault,
     Service,
     Stream,
-    UserGroup,
     UserMessage,
     UserPresence,
     UserProfile,
@@ -1825,7 +1825,7 @@ class NormalActionsTest(BaseAction):
         check_user_group_add("events[0]", events[0])
 
         # Test name update
-        backend = UserGroup.objects.get(name="backend")
+        backend = NamedUserGroup.objects.get(name="backend")
         events = self.verify_action(
             lambda: do_update_user_group_name(backend, "backendteam", acting_user=None)
         )
@@ -1839,7 +1839,7 @@ class NormalActionsTest(BaseAction):
         check_user_group_update("events[0]", events[0], "description")
 
         # Test can_mention_group setting update
-        moderators_group = UserGroup.objects.get(
+        moderators_group = NamedUserGroup.objects.get(
             name="role:moderators", realm=self.user_profile.realm, is_system_group=True
         )
         events = self.verify_action(
@@ -2732,7 +2732,7 @@ class NormalActionsTest(BaseAction):
 
     def test_realm_update_plan_type(self) -> None:
         realm = self.user_profile.realm
-        members_group = UserGroup.objects.get(name=SystemGroups.MEMBERS, realm=realm)
+        members_group = NamedUserGroup.objects.get(name=SystemGroups.MEMBERS, realm=realm)
         do_change_realm_permission_group_setting(
             realm, "can_access_all_users_group", members_group, acting_user=None
         )
@@ -3171,7 +3171,7 @@ class NormalActionsTest(BaseAction):
                 client="Internal",
             )
 
-            fields[TOPIC_NAME] = "stream events"
+            fields[TOPIC_NAME] = "channel events"
 
             msg = events[1]["message"]
             for k, v in fields.items():
@@ -3639,7 +3639,7 @@ class RealmPropertyActionTest(BaseAction):
                 check_realm_update("events[0]", events[0], name)
 
     def do_set_realm_permission_group_setting_test(self, setting_name: str) -> None:
-        all_system_user_groups = UserGroup.objects.filter(
+        all_system_user_groups = NamedUserGroup.objects.filter(
             realm=self.user_profile.realm,
             is_system_group=True,
         )
@@ -4193,7 +4193,7 @@ class SubscribeActionTest(BaseAction):
         events = self.verify_action(action, include_subscribers=include_subscribers, num_events=2)
         check_stream_update("events[0]", events[0])
 
-        moderators_group = UserGroup.objects.get(
+        moderators_group = NamedUserGroup.objects.get(
             name=SystemGroups.MODERATORS,
             is_system_group=True,
             realm=self.user_profile.realm,

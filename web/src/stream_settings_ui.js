@@ -248,9 +248,7 @@ export function add_sub_to_table(sub) {
         );
         stream_create.reset_created_stream();
         // goto topic `stream events` of the newly created stream
-        browser_history.go_to_location(
-            hash_util.by_stream_topic_url(sub.stream_id, "stream events"),
-        );
+        browser_history.go_to_location(hash_util.by_stream_url(sub.stream_id));
         if (stream_create.should_show_first_stream_created_modal()) {
             stream_create.set_first_stream_created_modal_shown();
             show_first_stream_created_modal(sub);
@@ -261,7 +259,7 @@ export function add_sub_to_table(sub) {
 function show_first_stream_created_modal(stream) {
     dialog_widget.launch({
         html_heading: $t_html(
-            {defaultMessage: "Stream <b><z-stream></z-stream></b> created!"},
+            {defaultMessage: "Channel <b><z-stream></z-stream></b> created!"},
             {
                 "z-stream": () => render_inline_decorated_stream_name({stream}),
             },
@@ -604,7 +602,7 @@ export function setup_page(callback) {
             child_wants_focus: true,
             values: [
                 {label: $t({defaultMessage: "Subscribed"}), key: "subscribed"},
-                {label: $t({defaultMessage: "All streams"}), key: "all-streams"},
+                {label: $t({defaultMessage: "All channels"}), key: "all-streams"},
             ],
             callback(_value, key) {
                 switch_stream_tab(key);
@@ -842,7 +840,7 @@ export function toggle_view(event) {
 
     if (event === "right_arrow" && stream_filter_tab === "Subscribed") {
         toggler.goto("all-streams");
-    } else if (event === "left_arrow" && stream_filter_tab === "All streams") {
+    } else if (event === "left_arrow" && stream_filter_tab === "All channels") {
         toggler.goto("subscribed");
     }
 }

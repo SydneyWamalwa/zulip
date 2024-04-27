@@ -64,16 +64,39 @@
     /* Information density and typography values */
     /* The legacy values here are updated via JavaScript */
     --base-font-size-px: 14px;
-    --base-line-height-unitless: calc(20 / 14);
+    --base-line-height-unitless: 1.214;
+    --markdown-interelement-space-px: 5px;
+    --markdown-interelement-doubled-space-px: calc(
+        var(--markdown-interelement-space-px) * 2
+    );
+
+    .more-dense-mode {
+        /* The legacy values here are not altered by JavaScript */
+        --base-font-size-px: 14px;
+        --base-line-height-unitless: 1.214;
+        --markdown-interelement-space-px: 5px;
+        --markdown-interelement-doubled-space-px: 10px;
+        --message-box-markdown-aligned-vertical-space: 5px;
+    }
 
     /*
     Message box elements and values.
     */
     --message-box-avatar-width: 35px;
     --message-box-avatar-height: var(--message-box-avatar-width);
-    --message-box-line-height: 1.214;
+    --message-box-avatar-column-width: 46px;
+    /* 6px appears to provide 5px of space between the avatar
+       and the selected-message outline, which is offset by -1px. */
+    --message-box-vertical-margin: 6px;
+    --message-box-markdown-aligned-vertical-space: var(
+        --markdown-interelement-space-px
+    );
     --message-box-icon-width: 26px;
     --message-box-icon-height: 25px;
+    /* The line-height on the sender line should coordinate with the
+       height of the hover icons. The sender line never wraps, so this
+       just keeps the two in line with the grid definition. */
+    --message-box-sender-line-height: var(--message-box-icon-height);
     /* This width is updated with an exact pixel
        width upon UI initialization. */
     --message-box-timestamp-column-width: 0;
@@ -259,6 +282,9 @@
     --color-text-message-default: hsl(0deg 0% 15%);
     --color-text-message-view-header: hsl(0deg 0% 20% / 100%);
     --color-text-message-header: hsl(0deg 0% 15%);
+    /* Light and dark mode both use the same hover color on
+       sender names. */
+    --color-text-sender-name-hover: hsl(200deg 100% 40%);
     --color-text-dropdown-input: hsl(0deg 0% 13.33%);
     --color-text-self-direct-mention: hsl(240deg 52% 45% / 100%);
     --color-text-self-group-mention: hsl(183deg 52% 26% / 100%);

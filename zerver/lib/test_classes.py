@@ -99,6 +99,7 @@ from zerver.lib.webhooks.common import (
 from zerver.models import (
     Client,
     Message,
+    NamedUserGroup,
     PushDeviceToken,
     Reaction,
     Realm,
@@ -106,7 +107,6 @@ from zerver.models import (
     Recipient,
     Stream,
     Subscription,
-    UserGroup,
     UserGroupMembership,
     UserMessage,
     UserProfile,
@@ -287,7 +287,9 @@ Output:
     django_client to fool the regex.
     """
     DEFAULT_SUBDOMAIN = "zulip"
-    TOKENIZED_NOREPLY_REGEX = settings.TOKENIZED_NOREPLY_EMAIL_ADDRESS.format(token="[a-z0-9_]{24}")
+    TOKENIZED_NOREPLY_REGEX = settings.TOKENIZED_NOREPLY_EMAIL_ADDRESS.format(
+        token=r"[a-z0-9_]{24}"
+    )
 
     def set_http_headers(self, extra: Dict[str, str], skip_user_agent: bool = False) -> None:
         if "subdomain" in extra:
@@ -1362,7 +1364,7 @@ Output:
         history_public_to_subscribers = get_default_value_for_history_public_to_subscribers(
             realm, invite_only, history_public_to_subscribers
         )
-        administrators_user_group = UserGroup.objects.get(
+        administrators_user_group = NamedUserGroup.objects.get(
             name=SystemGroups.ADMINISTRATORS, realm=realm, is_system_group=True
         )
 
@@ -1970,7 +1972,7 @@ Output:
         self.send_personal_message(shiva, polonius)
         self.send_huddle_message(aaron, [polonius, zoe])
 
-        members_group = UserGroup.objects.get(name="role:members", realm=realm)
+        members_group = NamedUserGroup.objects.get(name="role:members", realm=realm)
         do_change_realm_permission_group_setting(
             realm, "can_access_all_users_group", members_group, acting_user=None
         )
@@ -2416,7 +2418,7 @@ class BouncerTestCase(ZulipTestCase):
     def add_mock_response(self) -> None:
         # Match any endpoint with the PUSH_NOTIFICATION_BOUNCER_URL.
         assert settings.PUSH_NOTIFICATION_BOUNCER_URL is not None
-        COMPILED_URL = re.compile(settings.PUSH_NOTIFICATION_BOUNCER_URL + ".*")
+        COMPILED_URL = re.compile(settings.PUSH_NOTIFICATION_BOUNCER_URL + r".*")
         responses.add_callback(responses.POST, COMPILED_URL, callback=self.request_callback)
         responses.add_callback(responses.GET, COMPILED_URL, callback=self.request_callback)
 
