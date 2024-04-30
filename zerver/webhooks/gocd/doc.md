@@ -21,4 +21,5 @@ your build statuses.
 
 {!congrats.md!}
 
+
 ![](/static/images/integrations/gocd/001.png)
