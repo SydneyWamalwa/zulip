@@ -503,7 +503,6 @@
             /* Replicate the `.new-style` disabled values,
                without any color shifts. */
             cursor: not-allowed;
-            filter: saturate(0);
             opacity: 0.5;
         }
     }
@@ -512,7 +511,6 @@
     .message_edit_close {
         color: var(--color-exit-button-text);
         background: var(--color-exit-button-background);
-        border: 1px solid var(--color-exit-button-border);
 
         &:hover {
             background: var(--color-exit-button-background-interactive);
@@ -589,8 +587,13 @@
     &:read-only,
     &:disabled {
         cursor: not-allowed;
-        background-color: hsl(0deg 0% 93%);
     }
+}
+
+/* The selector needs to be written this way to override the specificity
+of the base style defined for a read-only textarea in dark mode. */
+.message_edit_form .edit-controls textarea.message_edit_content:read-only {
+    opacity: 1;
 }
 
 .message_edit_countdown_timer {
