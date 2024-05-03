@@ -37,6 +37,7 @@ def api_gocd_webhook(
     body = f"Author: {author}\nBuild status: {build_status} {emoji}\nDetails: [build log]({build_link})\nComment: {comment}"
     topic_name = pipeline_name
 
+
     check_send_webhook_message(request, user_profile, topic_name, body)
 
 
