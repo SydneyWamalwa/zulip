@@ -16,7 +16,7 @@ def api_gocd_webhook(
     request: HttpRequest,
     user_profile: UserProfile,
     *,
-    payload: JsonBodyPayload[dict],
+    payload: JsonBodyPayload[WildValue],
 ) -> HttpResponse:
     build_cause = payload["build_cause"]
     stages = payload["stages"]
